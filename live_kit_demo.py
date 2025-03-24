@@ -2,14 +2,13 @@ from flask import Flask, request, jsonify
 import threading
 import requests
 import livekit
-import time
 
+import time
 
 LIVEKIT_URL = "wss://demo-tymfvw1x.livekit.cloud"
 LIVEKIT_API_KEY = "APIzunoPLtAuHfG"
 LIVEKIT_API_SECRET = "TgGM3e0ru5zJjZpswxilB7TG3WG1ec9bWepNJDjLBFfC"
 
-# Initialize Flask app
 app = Flask(__name__)
 
 
@@ -37,7 +36,7 @@ def before_tts_cb(session, text):
     estimated_length = estimate_audio_length(text)
 
     # Send the estimated length to the backend for validation
-    backend_url = "http://localhost:5000/validate_audio"
+    backend_url = "http://localhost:8585/validate_audio"
     response = requests.post(backend_url, json={"length": estimated_length})
 
     if response.status_code == 200:
@@ -61,7 +60,19 @@ if __name__ == "__main__":
     # Initialize LiveKit Voice Pipeline Agent
     agent = livekit.VoicePipelineAgent(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET)
     agent.before_tts_callback = before_tts_cb
-    print("LiveKit Voice Pipeline Agent Running...")
+    print("LiveKit Voice Pipeline Agent Running...\n")
 
-    # Start the LiveKit agent
-    agent.start()
+    # CLI for User Input
+    while True:
+        user_input = input("Enter text for TTS (type 'exit' to quit): ")
+
+        if user_input.lower() == "exit":
+            print("Exiting...")
+            break
+
+        session = None  # Assuming a session can be created or retrieved
+        processed_text = before_tts_cb(session, user_input)
+
+        print(f"Processed Text: {processed_text}")
+
+    agent.stop()  # Stop the LiveKit agent before exiting
